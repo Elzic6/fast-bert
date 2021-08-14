@@ -366,14 +366,14 @@ class BertLMLearner(Learner):
         results = {"loss": eval_loss, "perplexity": float(perplexity)}
         # Neptune Log
         self.neptune_run['Fine_tune/fine_tune_eval_loss'].log(eval_loss)
-        self.neptune_run['Fine_tune/fine_tune_loss'] = results
+        self.neptune_run['Fine_tune/fine_tune_metrics'] = results
 
         results.update(validation_scores)
 
         return results
         # Neptune Log
         self.neptune_run['Fine_tune/fine_tune_validation_scores'].log(validation_scores)
-        self.neptune_run['Fine_tune/fine_tune_/scores'] = results
+        self.neptune_run['Fine_tune/fine_tune_validation/scores'] = results
         
     def save_model(self, path=None):
 
