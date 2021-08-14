@@ -51,6 +51,7 @@ class BertLMLearner(Learner):
         metrics,
         device,
         logger,
+        neptune_run=None,
         multi_gpu=True,
         is_fp16=True,
         warmup_steps=0,
@@ -81,6 +82,7 @@ class BertLMLearner(Learner):
             metrics,
             device,
             logger,
+            neptune_run,
             multi_gpu,
             is_fp16,
             warmup_steps,
@@ -101,6 +103,7 @@ class BertLMLearner(Learner):
         metrics,
         device,
         logger,
+        neptune_run=None,
         multi_gpu=True,
         is_fp16=True,
         warmup_steps=0,
@@ -140,7 +143,10 @@ class BertLMLearner(Learner):
 
         if self.multi_gpu:
             self.n_gpu = torch.cuda.device_count()
-
+        
+        # Neptune
+        self.neptune_run = neptune_run
+        
     ### Train the model ###
     def fit(
         self,
@@ -315,6 +321,8 @@ class BertLMLearner(Learner):
 
         if self.n_gpu > 1:
             loss = loss.mean()
+        # Neptune Log 
+        self.neptune_run['Fine_tune/fine_tune_batch_loss'].log(loss)
         if self.grad_accumulation_steps > 1:
             loss = loss / self.grad_accumulation_steps
 
@@ -356,11 +364,17 @@ class BertLMLearner(Learner):
         perplexity = torch.exp(torch.tensor(eval_loss))
 
         results = {"loss": eval_loss, "perplexity": float(perplexity)}
+        # Neptune Log
+        self.neptune_run['Fine_tune/fine_tune_eval_loss'].log(eval_loss)
+        self.neptune_run['Fine_tune/fine_tune_loss'] = results
 
         results.update(validation_scores)
 
         return results
-
+        # Neptune Log
+        self.neptune_run['Fine_tune/fine_tune_validation_scores'].log(validation_scores)
+        self.neptune_run['Fine_tune/fine_tune_/scores'] = results
+        
     def save_model(self, path=None):
 
         if not path:
